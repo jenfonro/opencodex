@@ -1189,6 +1189,7 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     const submittedModelAutoCompactTokenLimits = Object.hasOwn(prov, "modelAutoCompactTokenLimits");
     const submittedModelDisplayNames = Object.hasOwn(prov, "modelDisplayNames");
     const submittedRequestPacing = Object.hasOwn(prov, "requestPacing");
+    const submittedAnthropicTransforms = Object.hasOwn(prov, "anthropicRequestTransforms");
     const submittedUpstreamWebsocket = Object.hasOwn(prov, "upstreamWebsocket");
     // Same trap, one more field: DeepSeek carries a registry default of `true` for
     // annotateEmptyToolOutputs, so enrichment cannot distinguish "the client omitted it"
@@ -1244,6 +1245,10 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     }
     if (!submittedRequestPacing && existing?.requestPacing) {
       prov.requestPacing = structuredClone(existing.requestPacing);
+    }
+    // Older dashboard forms omit this policy; an unrelated save must not reset it.
+    if (!submittedAnthropicTransforms && existing?.anthropicRequestTransforms) {
+      prov.anthropicRequestTransforms = structuredClone(existing.anthropicRequestTransforms);
     }
     if (!submittedContextWindow && existing?.contextWindow !== undefined) {
       prov.contextWindow = existing.contextWindow;

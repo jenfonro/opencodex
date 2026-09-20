@@ -108,6 +108,20 @@ The former `showCodexSparkQuota` key is inert passthrough data when loading an o
 It is absent from the typed settings contract and cannot re-enable Spark quota through the
 management API. Retirement does not migrate user-selected model ids or erase usage history.
 
+## Optional Anthropic request transformations
+
+On the personal-use branch, `providers.<name>.anthropicRequestTransforms` contains
+three optional booleans: `promptCaching`, `identityRewrite`, and `toolCatalogNudge`.
+Omission preserves upstream defaults. The shared strict schema in
+`src/config/anthropic-request-transforms.ts` rejects wrong types and unknown child keys
+at the disk and management boundaries. It imports no config runtime, so management
+validation can initialize before the config facade. The provider field policy in
+`src/server/auth-cors.ts` exposes it as editor-safe, without exposing credentials.
+Ordinary provider-form saves preserve an omitted policy; an explicit object wins.
+
+The [adapter contract](providers-and-adapters.md#optional-anthropic-request-transformations)
+owns the runtime effects. These flags do not alter catalog ownership or other adapters.
+
 ## Config injection
 
 An explicit desktop restart after injection uses the [runtime process-membership contract](runtime.md#codex-desktop-process-membership); mixed Windows path spelling does not change which installation the restart targets.

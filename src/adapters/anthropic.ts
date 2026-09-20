@@ -706,6 +706,7 @@ function orphanToolResultContent(msg: OcxToolResultMessage): string | unknown[] 
 function messagesToAnthropicFormat(
   parsed: OcxParsedRequest,
   toolNames: { toWire: (name: string) => string },
+  transforms: NonNullable<OcxProviderConfig["anthropicRequestTransforms"]> = {},
 ): { system: string | undefined; messages: unknown[] } {
   // One allocator for the whole request: a tool_result must resolve to the SAME wire id its
   // call got, and two distinct raw ids must never collapse into one. Conforming ids are claimed
@@ -720,14 +721,15 @@ function messagesToAnthropicFormat(
       callIds.reserve((message as OcxToolResultMessage).toolCallId);
     }
   }
-  const toolCatalogNudge = buildNonOpenAIToolCatalogNudgeForTools(
+  const toolCatalogNudge = transforms.toolCatalogNudge === false ? undefined : buildNonOpenAIToolCatalogNudgeForTools(
     parsed.context.tools,
     parsed.options.toolChoice,
     tool => toolNames.toWire(namespacedToolName(tool.namespace, tool.name)),
   );
   const systemParts = [...(parsed.context.systemPrompt ?? []), ...(toolCatalogNudge ? [toolCatalogNudge] : [])];
+  const systemText = systemParts.join("\n\n");
   const system = systemParts.length
-    ? identifyRoutedModel(systemParts.join("\n\n"), parsed.modelId) || undefined
+    ? (transforms.identityRewrite === false ? systemText : identifyRoutedModel(systemText, parsed.modelId)) || undefined
     : undefined;
   const messages: unknown[] = [];
 
@@ -923,6 +925,27 @@ function normalizeAnthropicInputSchema(schema: unknown): Record<string, unknown>
   return normalized;
 }
 
+/** Apply optional caching only; disabling this policy leaves the body untouched. */
+export function applyAnthropicPromptCachePolicy(
+  body: Record<string, unknown>,
+  provider: OcxProviderConfig,
+  cacheRetention?: "none" | "short" | "long",
+): void {
+  if (provider.anthropicRequestTransforms?.promptCaching === false) return;
+  // Prompt caching: native Anthropic supports top-level automatic caching, which
+  // follows the moving final block across turns. Keep one breakpoint slot free for it.
+  const cc = resolveCacheControl(cacheRetention);
+  const automaticPromptCaching = cc && usesNativeAnthropicEndpoint(provider);
+  if (automaticPromptCaching) body.cache_control = cc;
+  const explicitLimit = automaticPromptCaching ? MAX_CACHE_BREAKPOINTS - 1 : MAX_CACHE_BREAKPOINTS;
+  applyPromptCaching(body, cc, {
+    maxExplicitBreakpoints: explicitLimit,
+    skipLastUser: !!automaticPromptCaching,
+  });
+  enforceCacheControlLimit(body, explicitLimit);
+  normalizeTtlOrdering(body);
+}
+
 export function createAnthropicAdapter(provider: OcxProviderConfig, cacheRetention?: "none" | "short" | "long"): ProviderAdapter {
   const isOAuth = provider.authMode === "oauth";
   const toolNames = buildToolNameTransforms(provider);
@@ -939,7 +962,7 @@ export function createAnthropicAdapter(provider: OcxProviderConfig, cacheRetenti
         throw new Error("anthropic provider requires a non-empty apiKey (authMode: key)");
       }
 
-      const { system, messages } = messagesToAnthropicFormat(parsed, toolNames);
+      const { system, messages } = messagesToAnthropicFormat(parsed, toolNames, provider.anthropicRequestTransforms);
       // Before image normalization, so the framing block is present for every downstream pass.
       if (isAgentRouterEndpoint(provider.baseUrl)) applyAgentRouterLanguageFraming(messages);
       // Primary image layer: resize/re-encode to fit Anthropic limits without dropping
@@ -1093,18 +1116,7 @@ export function createAnthropicAdapter(provider: OcxProviderConfig, cacheRetenti
       }
       if (provider.headers) Object.assign(headers, provider.headers);
 
-      // Prompt caching: native Anthropic supports top-level automatic caching, which
-      // follows the moving final block across turns. Keep one breakpoint slot free for it.
-      const cc = resolveCacheControl(cacheRetention);
-      const automaticPromptCaching = cc && usesNativeAnthropicEndpoint(provider);
-      if (automaticPromptCaching) body.cache_control = cc;
-      const explicitLimit = automaticPromptCaching ? MAX_CACHE_BREAKPOINTS - 1 : MAX_CACHE_BREAKPOINTS;
-      applyPromptCaching(body, cc, {
-        maxExplicitBreakpoints: explicitLimit,
-        skipLastUser: !!automaticPromptCaching,
-      });
-      enforceCacheControlLimit(body, explicitLimit);
-      normalizeTtlOrdering(body);
+      applyAnthropicPromptCachePolicy(body, provider, cacheRetention);
 
       return { url, method: "POST", headers, body: JSON.stringify(body) };
     },

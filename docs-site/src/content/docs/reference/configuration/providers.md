@@ -512,6 +512,47 @@ setting and never grants it from a URL override. Without it, destination validat
 local endpoint for inference and model discovery. The OAuth browser callback listener itself
 does not require this provider opt-in. See the [OrcaRouter setup example](/guides/providers/).
 
+## Optional Anthropic request transformations (personal-use)
+
+The `personal-use` branch adds `providers.<name>.anthropicRequestTransforms` for
+requests translated by the `anthropic` adapter. This is a fork-specific addition,
+not a setting supported by an unmodified upstream release.
+
+Add this object to an existing provider in `config.json` or the provider JSON editor:
+
+```json
+"anthropicRequestTransforms": {
+  "promptCaching": false,
+  "identityRewrite": false,
+  "toolCatalogNudge": false
+}
+```
+
+Each flag is independent. Omitted flags or `true` retain the existing behavior;
+invalid types and unknown keys are rejected. The scope is one provider, not a
+global setting and not a change to other adapters.
+
+- `promptCaching: false` skips cache marker insertion, breakpoint trimming, and
+  TTL normalization in the constructed Anthropic request, even if global
+  `cacheRetention` is `short` or `long`. It does not disable an upstream gateway's
+  own caching or the bridge's conversation state. Token costs may increase.
+- `identityRewrite: false` leaves the caller's identity sentences unchanged.
+- `toolCatalogNudge: false` omits OpenCodex's extra tool-contract system paragraph.
+  It does not remove the tool declarations supplied by the client.
+
+Message/tool schema conversion, freeform custom tools, call/result pairing,
+thinking signatures, streaming, image compatibility, and OAuth requirements stay
+intact. This is still protocol translation, not byte-for-byte passthrough.
+The existing model catalog is not rewritten by these flags. Client-native tools
+remain owned and executed by the client, with their wire representation converted
+by OpenCodex.
+
+The provider JSON editor round-trips the policy, and an unrelated add/edit form
+save preserves it when the form omits the field. Replace the object with `{}` or
+remove it through the JSON editor to restore defaults. Installing this branch's
+code is required before these new config keys have any effect; changing the JSON
+cannot teach an older runtime to recognize them.
+
 ## Provider diagnostic outbound safety
 
 Dashboard connection tests and live model discovery use a bounded GET-only transport. Without an

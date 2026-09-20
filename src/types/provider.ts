@@ -906,6 +906,15 @@ export interface OcxProviderConfig {
    * other EOFs remain truncation errors. Absent = strict default behavior.
    */
   anthropicEofTolerance?: boolean;
+  /** Optional Anthropic request mutations; omitted flags retain upstream defaults. */
+  anthropicRequestTransforms?: {
+    /** false skips cache insertion, breakpoint trimming AND TTL normalization. */
+    promptCaching?: boolean;
+    /** false preserves the caller's identity sentences. */
+    identityRewrite?: boolean;
+    /** false omits the extra tool-catalog system prompt, not client tool schemas. */
+    toolCatalogNudge?: boolean;
+  };
   /**
    * Model ids that do NOT accept image inputs. The proxy gives them "eyes" via the vision sidecar:
    * attached images are described by a gpt vision model and replaced with text before the call.
