@@ -135,6 +135,32 @@ predictions. Explicit provider/model price overrides still take precedence.
 
 Providers can expose a built-in shorthand, such as `agy` for `google-antigravity`. A configured provider name or explicit alias claims that shorthand case-insensitively; a different provider's built-in shorthand is then suppressed in both catalog names and alias routing. For example, configuring a provider named `agy` keeps Google's models under `google-antigravity/<model>`, while `agy/<model>` selects the configured provider. Canonical provider names still require an exact case match, and unrecognized prefixes retain the existing model-routing fallback.
 
+## Claude Code cache-layout alignment (personal-use)
+
+For an `anthropic` provider, set `claudeCodeCacheAlignment: true` inside that provider's
+`config.json` entry to opt into the captured Claude Code cache layout:
+
+```json
+{ "claudeCodeCacheAlignment": true }
+```
+
+This changes cache-marker placement only. False or omission restores upstream OpenCodex
+caching; it does **not** disable caching. `cacheRetention` still controls lifetime and an
+explicit `"none"`.
+
+The captured baseline is Claude CLI 2.1.278 (`external, sdk-cli`) requesting Opus 4.8,
+Sonnet 5 and Fable 5 directly through a capture proxy to the configured gateway.
+It marks the SDK identity, main system prompt and final message, with no tool-definition,
+billing-header or top-level marker. OpenCodex uses the existing system blocks, so key-auth
+requests normally have two total markers and OAuth requests three; no text is added to
+force a count. Initial-request captures are not a guarantee for every CLI mode or version.
+Downstream cache support, hit rates and relay-specific rewrites remain separate concerns.
+
+This replaces the old personal-use `anthropicRequestTransforms` customization. Remove
+that obsolete block when upgrading; its three flags no longer change runtime behavior.
+All non-cache transformations follow upstream OpenCodex. The flag is preserved by the
+raw provider editor and unrelated form saves. No restart or config migration is automatic.
+
 ## Provider entries (`OcxProviderConfig`)
 
 | Field | Type | Meaning |

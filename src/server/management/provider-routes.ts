@@ -487,6 +487,11 @@ function applyProviderPatchFields(
     next.upstreamWebsocket = rawBody.upstreamWebsocket;
     touched = true;
   }
+  if (Object.hasOwn(rawBody, "claudeCodeCacheAlignment")) {
+    if (typeof rawBody.claudeCodeCacheAlignment !== "boolean") return { error: "claudeCodeCacheAlignment must be a boolean" };
+    next.claudeCodeCacheAlignment = rawBody.claudeCodeCacheAlignment;
+    touched = true;
+  }
   // The Models page edits the catalog hints in place; keep them on the existing
   // provider mutation path so validation, cache invalidation, and convergence stay unified (#1073).
   if (Object.hasOwn(rawBody, "contextWindow")) {
@@ -1258,6 +1263,9 @@ export async function handleProviderRoutes(ctx: ManagementContext): Promise<Resp
     // keeps an operator's explicit false from being treated as absent.
     if (!submittedUpstreamWebsocket && existing?.upstreamWebsocket !== undefined) {
       prov.upstreamWebsocket = existing.upstreamWebsocket;
+    }
+    if (!Object.hasOwn(body.provider, "claudeCodeCacheAlignment") && existing?.claudeCodeCacheAlignment !== undefined) {
+      prov.claudeCodeCacheAlignment = existing.claudeCodeCacheAlignment;
     }
     if (existing?.modelContextWindows) {
       // When the client did send a map, its keys win and the user's other keys survive. When

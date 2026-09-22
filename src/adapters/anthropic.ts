@@ -29,6 +29,7 @@ import { decodeServerSentEvents } from "../lib/sse-decoder";
 import { isTranslatorBudgetExceededError, retainTranslatedEventBatch, type TranslatorBudget } from "../lib/translator-budget";
 import { isReasoningEffortOmitted, modelRecordValue } from "../reasoning-effort";
 import { applyAgentRouterLanguageFraming, isAgentRouterEndpoint } from "./agentrouter";
+import { applyClaudeCodeCacheAlignment } from "./anthropic-cache-alignment";
 
 /** Map a user content part to an Anthropic content block (text or image source). */
 function toAnthropicContentPart(p: OcxContentPart): unknown {
@@ -1092,6 +1093,11 @@ export function createAnthropicAdapter(provider: OcxProviderConfig, cacheRetenti
         else headers["x-api-key"] = provider.apiKey;
       }
       if (provider.headers) Object.assign(headers, provider.headers);
+
+      if (provider.claudeCodeCacheAlignment === true) {
+        applyClaudeCodeCacheAlignment(body, resolveCacheControl(cacheRetention));
+        return { url, method: "POST", headers, body: JSON.stringify(body) };
+      }
 
       // Prompt caching: native Anthropic supports top-level automatic caching, which
       // follows the moving final block across turns. Keep one breakpoint slot free for it.

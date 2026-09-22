@@ -149,6 +149,27 @@ of the compatibility behavior record for the same reason as above.
 
 The shared Responses path follows the [bounded multipart recovery contract](subagents.md#multipart-encrypted-task-recovery); credential admission and retry policy remain unchanged.
 
+## Opt-in Claude Code cache layout
+
+`src/adapters/anthropic.ts` selects `src/adapters/anthropic-cache-alignment.ts` only when
+the provider has `claudeCodeCacheAlignment: true`. False or omission keeps the upstream
+OpenCodex cache policy, including native automatic caching, unchanged.
+
+The opt-in replaces wire-level markers with up to two existing non-billing system text
+blocks and the last cacheable block of the final message. It adds no identity or billing
+text, tool marker, top-level marker, or penultimate-turn marker. Key-auth translation
+normally has one system block (two total markers); OAuth already has the SDK identity
+plus the main prompt (three total). Thinking and empty blocks are not marked. Tool schema
+properties and tool payload data named `cache_control` are not wire-level markers.
+
+The baseline evidence is Claude CLI 2.1.278 in `external, sdk-cli` mode, captured before
+sub2api for Opus 4.8, Sonnet 5 and Fable 5. These captures cover initial requests/retries,
+not every CLI mode or future version. `cacheRetention` still owns lifetime and explicit
+opt-out. This policy changes no text, authentication, tools, routing, or native Messages
+passthrough, and makes no guarantee about downstream cache hits or relay rewrites.
+Shape-only evidence and translation regressions live in
+`tests/adapters/anthropic/anthropic-cache-alignment.test.ts`.
+
 ## Hosted-search continuation binding
 
 The opt-in key-auth Responses hosted-search bridge in `src/server/responses/passthrough-delivery.ts` captures the

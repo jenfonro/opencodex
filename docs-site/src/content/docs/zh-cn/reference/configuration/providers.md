@@ -71,6 +71,27 @@ selector，而不是分配一个新名称。
 
 提供者可以有内置缩写，例如 `google-antigravity` 的 `agy`。如果已配置的提供者名称或显式别名占用了该缩写（不区分大小写），另一个提供者的内置缩写就会在目录名称和别名路由中同时禁用。例如，配置名为 `agy` 的提供者后，Google 模型会显示为 `google-antigravity/<model>`，而 `agy/<model>` 会选择已配置的提供者。规范提供者名称仍要求大小写完全一致；无法识别的前缀继续沿用现有的模型路由回退行为。
 
+## Claude Code 缓存布局对齐（personal-use）
+
+在 `config.json` 的 `anthropic` 提供者条目内加入：
+
+```json
+{ "claudeCodeCacheAlignment": true }
+```
+
+此开关只对齐缓存标记位置。设为 `false` 或不配置时，保留 OpenCodex 上游默认缓存行为，
+并不是关闭缓存。缓存有效期以及显式关闭仍由 `cacheRetention` 控制。
+
+依据是 Claude CLI 2.1.278（`external, sdk-cli` 模式）经过抓包代理向网关请求
+Opus 4.8、Sonnet 5、Fable 5 的实际数据：SDK 身份段、主 system 段、末尾消息有标记，
+工具定义、计费头和请求顶层没有标记。OpenCodex 只使用已有 system 段，因此 key 认证
+通常为两个断点，OAuth 已有身份段时为三个；不会为了凑数量插入文本。初始请求抓包
+不代表所有 CLI 模式或未来版本都相同，上游命中率和下游 relay 改写也不由此保证。
+
+此配置替代旧 personal-use 的 `anthropicRequestTransforms` 改造。升级时移除旧配置块，
+旧的三个开关不再影响运行行为；非缓存转换全部恢复 OpenCodex 上游实现。
+原始提供者编辑器以及未涉及此字段的表单保存会保留此开关，不会自动迁移配置或重启。
+
 ## 提供者条目（`OcxProviderConfig`）
 
 | 字段 | 类型 | 含义 |

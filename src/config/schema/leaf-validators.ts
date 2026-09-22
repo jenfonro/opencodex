@@ -324,6 +324,7 @@ export const providerConfigSchema = z.object({
   // feature that is off by default. The management write boundary still rejects it loudly.
   webSearchBridge: providerWebSearchBridgeSchema.optional().catch(undefined),
   xaiResponsesXSearch: z.boolean().optional(),
+  claudeCodeCacheAlignment: z.boolean().optional(),
   xaiResponsesDefaultVersion: z.number().int().positive().optional().catch(undefined),
   zaiResponsesDefaultVersion: z.number().int().positive().optional().catch(undefined),
 }).passthrough();

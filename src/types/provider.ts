@@ -907,6 +907,11 @@ export interface OcxProviderConfig {
    */
   anthropicEofTolerance?: boolean;
   /**
+   * Opt in to the captured Claude Code system/final-message cache layout on the
+   * Anthropic adapter. False/absent retains upstream OpenCodex caching, not cache opt-out.
+   */
+  claudeCodeCacheAlignment?: boolean;
+  /**
    * Model ids that do NOT accept image inputs. The proxy gives them "eyes" via the vision sidecar:
    * attached images are described by a gpt vision model and replaced with text before the call.
    */

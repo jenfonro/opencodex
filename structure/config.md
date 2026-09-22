@@ -438,6 +438,19 @@ Usage consumers preserve positive incomplete-history metadata as specified in [u
 malformed persisted values stay disabled. It controls only the allowlisted client-output hints
 described in [Responses transport](transports/responses.md), not upstream policy or model selection.
 
+## Provider cache-layout alignment
+
+`providers.<name>.claudeCodeCacheAlignment` is an optional strict boolean in
+`src/config/schema/leaf-validators.ts` and `src/server/auth-cors.ts`. It enables the
+[captured Claude Code cache layout](providers-and-adapters.md#opt-in-claude-code-cache-layout)
+only in the Anthropic adapter; false or omission selects upstream OpenCodex behavior,
+not disabled caching. The editor DTO carries the field without credentials, and
+`src/server/management/provider-routes.ts` preserves either boolean on unrelated form
+saves that omit it. Explicit writes replace it. There is no automatic config migration
+or production restart. The previous personal-use `anthropicRequestTransforms` flags
+have no runtime effect; they are not aliases for this setting.
+`tests/config/claude-code-cache-alignment.test.ts` covers validation and persistence.
+
 ## Management-backed CLI commands need a management plane
 
 `src/cli/runtime-api.ts` is the single client every headless management subcommand calls through, so

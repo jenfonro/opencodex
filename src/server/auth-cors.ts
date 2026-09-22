@@ -821,6 +821,9 @@ export function providerManagementConfigError(
   if (raw.xaiResponsesXSearch !== undefined && typeof raw.xaiResponsesXSearch !== "boolean") {
     return `provider ${name} xaiResponsesXSearch must be a boolean`;
   }
+  if (raw.claudeCodeCacheAlignment !== undefined && typeof raw.claudeCodeCacheAlignment !== "boolean") {
+    return `provider ${name} claudeCodeCacheAlignment must be a boolean`;
+  }
   const defaultMaxOutputError = positiveIntegerConfigError(raw.defaultMaxOutputTokens, "defaultMaxOutputTokens");
   if (defaultMaxOutputError) return `provider ${name} ${defaultMaxOutputError}`;
   const maxOutputError = positiveIntegerRecordConfigError(raw.modelMaxOutputTokens, "modelMaxOutputTokens");
@@ -1039,6 +1042,7 @@ const PROVIDER_CONFIG_FIELD_POLICY = {
   thinkingBudgetModels: "editor",
   escapeBuiltinToolNames: "editor",
   anthropicEofTolerance: "editor",
+  claudeCodeCacheAlignment: "editor",
   noVisionModels: "editor",
   googleMode: "editor",
   project: "editor",
