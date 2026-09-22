@@ -1,7 +1,6 @@
 import * as z from "zod/v4";
 import { join } from "node:path";
 import { isValidProviderName } from "../provider-name";
-import { anthropicRequestTransformsSchema } from "../anthropic-request-transforms";
 import {
   modelPinnedEffortsConfigError,
   pinnedReasoningEffortConfigError,
@@ -227,7 +226,6 @@ const modelCapabilitiesSchema = z.unknown().superRefine((value, ctx) => {
  * fields pass through (preserved for runtime extensions).
  */
 export const providerConfigSchema = z.object({
-  anthropicRequestTransforms: anthropicRequestTransformsSchema.optional(),
   modelCapabilities: modelCapabilitiesSchema.optional(),
   pinnedReasoningEffort: pinnedReasoningEffortSchema.optional(),
   modelPinnedReasoningEfforts: modelPinnedEffortsSchema.optional(),

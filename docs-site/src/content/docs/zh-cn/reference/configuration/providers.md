@@ -152,37 +152,6 @@ selector，而不是分配一个新名称。
 
 API key 提供者可以持有字面量 key，或环境引用。OAuth 提供者使用由 `ocx login` 填充的凭据存储；基于订阅的 Claude Code 启动行为在 [`claudeCode.authMode`](/reference/configuration/server/#claude-code) 下配置。
 
-## 可选的 Anthropic 请求处理（personal-use）
-
-`personal-use` 分支新增 `providers.<name>.anthropicRequestTransforms`，只影响
-由 `anthropic` 适配器转换的请求。这是本分支的定制功能，不是上游原版自带配置。
-在 `config.json` 或提供者 JSON 编辑器中，为已有的提供者添加：
-
-```json
-"anthropicRequestTransforms": {
-  "promptCaching": false,
-  "identityRewrite": false,
-  "toolCatalogNudge": false
-}
-```
-
-三个开关彼此独立；省略或设为 `true` 时保持原有行为。类型错误和未知子字段会被拒绝。
-配置只影响当前提供者，不会全局修改其他适配器。
-
-- `promptCaching: false`：跳过构造请求时的缓存标记添加、断点裁剪和 TTL 调整，
-  优先于全局 `cacheRetention`。不会关闭上游网关自身的缓存或协议桥的会话状态；
-  不再添加缓存标记可能增加 token 费用。
-- `identityRewrite: false`：保留客户端原有的身份句，不再替换。
-- `toolCatalogNudge: false`：不再追加 OpenCodex 的工具使用提示段落，仍保留客户端工具声明。
-
-消息和工具参数转换、原生 custom 工具、调用与结果配对、思考签名、流式响应、图片兼容及
-OAuth 必需逻辑保持不变。这仍是协议转换，不是逐字节透传。这些开关不会改写现有模型
-catalog；工具由客户端声明和执行，OpenCodex 只转换其协议表示。
-
-提供者 JSON 编辑器会保留这些字段；旧版添加/编辑表单未携带该字段时，不会因无关保存而
-清除它。将对象替换为 `{}`，或在 JSON 编辑器删除它，即可恢复默认行为。必须先运行
-本分支的代码，新增配置才能生效；仅修改 JSON 不会让旧运行时自动获得识别能力。
-
 ## 提供者诊断出站安全性
 
 仪表板连接测试和实时模型发现使用受限的、仅 GET 传输。没有出站代理时，opencodex 只会解析一次主机名，并仅连接到该已验证地址。HTTPS 仍会保留原始 Host、SNI 和证书验证；提供者配置不能关闭证书检查。

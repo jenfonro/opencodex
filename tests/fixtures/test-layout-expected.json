@@ -65,7 +65,6 @@
   "anthropic-quota-dispatch.test.ts": "adapters/anthropic",
   "anthropic-ratelimit-headers.test.ts": "adapters/anthropic",
   "anthropic-reasoning.test.ts": "adapters/anthropic",
-  "anthropic-request-transforms.test.ts": "adapters/anthropic",
   "anthropic-sidecar-account-failover.test.ts": "adapters/anthropic",
   "anthropic-stream-hardening.test.ts": "adapters/anthropic",
   "anthropic-tail-guard.test.ts": "adapters/anthropic",

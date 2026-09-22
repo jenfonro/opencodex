@@ -149,22 +149,6 @@ of the compatibility behavior record for the same reason as above.
 
 The shared Responses path follows the [bounded multipart recovery contract](subagents.md#multipart-encrypted-task-recovery); credential admission and retry policy remain unchanged.
 
-## Optional Anthropic request transformations
-
-The personal-use branch's `src/adapters/anthropic.ts` reads the provider-scoped
-`anthropicRequestTransforms` policy. When `promptCaching` is false, the entire
-cache pass is skipped: no insertion, breakpoint trimming, or TTL normalization,
-including on native Anthropic endpoints. `identityRewrite: false` preserves the
-caller system identity sentences. `toolCatalogNudge: false` suppresses only the
-additional tool-contract paragraph, not declared tools or their schemas.
-
-Omitted flags preserve existing behavior. Tool translation, call/result IDs,
-reasoning signatures, SSE, image handling, and authentication requirements are
-unchanged. Inbound native passthrough and upstream-owned caches are not controlled
-by these switches. The [config contract](config.md#optional-anthropic-request-transformations)
-owns validation and persistence. Coverage is in
-`tests/adapters/anthropic/anthropic-request-transforms.test.ts`.
-
 ## Hosted-search continuation binding
 
 The opt-in key-auth Responses hosted-search bridge in `src/server/responses/passthrough-delivery.ts` captures the
